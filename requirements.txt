@@ -1,0 +1,5 @@
+the required libraries for the Project:
+Pandas, numpy, matplotlib, seaborn, sklearn
+
+we specify for every library for which Purpose is used
+and which other requirements needed
