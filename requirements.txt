@@ -1,6 +1,7 @@
 the required libraries for the Project:
-Pandas, numpy, matplotlib, seaborn, sklearn
+Pandas, numpy, matplotlib, seaborn, sklearn, sqllite
 
 we specify for every library for which Purpose is used
 and which other requirements needed
+
 I have to add any spec for the analysis and details to the data used
