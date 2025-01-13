@@ -8,7 +8,7 @@ def main():
     conn = ct.create_or_open_database()
     cur = conn.cursor()
     gdf_bezirke = dbu.get_geo()
-    #TODO. Moe separation of concerns if possible 
+    #TODO. More separation of concerns if possible 
     #avoid opening the database many times 
     
     #Table creation

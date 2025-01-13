@@ -63,7 +63,7 @@ def get_geo():
     gdf = gdf[['name', 'geometry']]
 
     # Save the GeoDataFrame as a GeoJSON file
-    gdf.to_file("berlin_bezirke.geojson", driver="GeoJSON")
+    gdf.to_file("../data/processed/berlin_bezirke.geojson", driver="GeoJSON")
 
     # List of desired Berlin Bezirke
     berlin_bezirke = [
@@ -73,7 +73,7 @@ def get_geo():
     ]
 
     # Load and process GeoJSON file
-    gdf_bezirke = gpd.read_file("berlin_bezirke.geojson")
+    gdf_bezirke = gpd.read_file("../data/processed/berlin_bezirke.geojson")
     gdf_bezirke = gdf_bezirke[gdf_bezirke['name'].isin(berlin_bezirke)]  # Filter Bezirke
     gdf_bezirke = gdf_bezirke.dissolve(by="name")  # Dissolve by name
     gdf_bezirke = gdf_bezirke.to_crs("EPSG:4326")  # Ensure CRS is WGS84
@@ -83,6 +83,6 @@ def get_geo():
     
     return gdf_bezirke
 
-def fetch_data_df_chunk(conn):
-    chunks = pd.read_sql_query("SELECT * FROM Messdaten_auto", conn, chunksize=10000)
+def fetch_data_df_chunk(conn, table_name):
+    chunks = pd.read_sql_query(f"SELECT * FROM {table_name}", conn, chunksize=10000)
     return chunks
