@@ -106,5 +106,6 @@ def create_table_messdaten_Fahrrad (cur):
     
 
 def create_indexes(cur):
+    #add index for primary key + index for date
     cur.execute('CREATE INDEX IF NOT EXISTS idx_mq_name ON Messdaten_auto(MQ_KURZNAME);')
     cur.execute('CREATE INDEX IF NOT EXISTS idx_mq_name ON Messdaten_Fahrrad(MQ_KURZNAME);')
