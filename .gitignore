@@ -1,3 +1,12 @@
-"data/processed/my_database_project.db" 
-"data/processed/berlin_bezirke.geojson" 
-__py__
+# Ignore specific files
+data/processed/my_database_project.db
+data/processed/berlin_bezirke.geojson
+
+# Ignore __pycache__ and any .pyc files
+__pycache__/
+*.pyc
+
+# Ignore all files inside the "Cache" folder
+cache/
+.mypy_cache
+*test*

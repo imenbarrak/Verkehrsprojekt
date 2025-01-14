@@ -8,7 +8,10 @@ import pandas as pd
 import os
 from multiprocessing import Process, Queue, current_process
 import create_tables as ct
+import db_utils as dbu
+import numpy as np
 
+#TODO optimize the time needed to store in the dabase and check if it is normal 
 
 def store_date(cur):
     
@@ -208,6 +211,7 @@ def process_file(file_info, date_lookup, queue):
             .reset_index()
             .rename(columns={'q_pkw_mq_hr': 'mean_q_pkw_mq_hr'})
         )
+        mean_values['mean_q_pkw_mq_hr'] = np.floor(mean_values['mean_q_pkw_mq_hr']).astype(int)
 
         # Merge mean values back into the chunk
         chunk = chunk.merge(
@@ -236,26 +240,34 @@ def process_file(file_info, date_lookup, queue):
         
     print(f"[{current_process().name}] Finished file: {file_path}")
 
-def store_weather_data(conn):
+def store_weather_data_Pro_Bezirk(conn):
+    df_final = pd.DataFrame()
+    df_bezirke = dbu.fetch_data_bezirk('Bezirke', conn)
+    for name in df_bezirke:
+        try:
+            df_wetter_bezirk = pd.read_csv('../data/raw/Bezirke Wetter/open-meteo-' + name + '.csv', header = 2)
+            df_wetter_bezirk[df_wetter_bezirk.columns[0]] = pd.to_datetime(df_wetter_bezirk.iloc[:, 0], errors='coerce')
+            df_wetter_bezirk['Date'] = df_wetter_bezirk.iloc[:,0].dt.strftime('%d.%m.%Y')  # Extract the date part
+            df_wetter_bezirk['TimeID'] = df_wetter_bezirk.iloc[:,0].dt.hour  # Extract the time part
+            df_wetter_bezirk.reset_index()
+            #TODO: check if improving is possible 
+            date_dim = pd.read_sql_query("SELECT DateID, Date FROM Date_dim", conn)
+            df_wetter_bezirk = pd.merge(df_wetter_bezirk,  date_dim , on = 'Date', how = 'inner')
+            
+            df_wetter_bezirk.drop(['time','Date'], inplace = True, axis = 1)
+            df_final = pd.concat([df_final, df_wetter_bezirk], ignore_index=True)
+            
+        except Exception as e:
+            print(f"Error querying table Bezirke : {e}")
+            continue  # Skip this table if there's an error
         
-    csv_file_path = '../data/raw/Bezirke_Durchschnitt_wetter.csv' 
-    # Load the data from csv
-    df = pd.read_csv(csv_file_path, delimiter=',', encoding ='latin1')
-    df[df.columns[0]] = pd.to_datetime(df.iloc[:, 0], errors='coerce')
-    df['Date'] = df.iloc[:,0].dt.strftime('%d.%m.%Y')  # Extract the date part
-    df['TimeID'] = df.iloc[:,0].dt.hour  # Extract the time part
-    df.reset_index()
-
-    date_dim = pd.read_sql_query("SELECT DateID, Date FROM Date_dim", conn)
-    df = pd.merge(df,  date_dim[['DateID', 'Date']], on='Date', how='left')
-    df.drop(['time','is_day ()','Date'], inplace= True,axis=1)
-    new_order = ['DateID', 'TimeID','temperature_2m (°C)', 'relative_humidity_2m (%)', 'rain (mm)',
-        'snowfall (cm)', 'cloud_cover (%)', 'wind_speed_10m (km/h)', 'sunshine_duration (s)']  # Specify the new order
-    df = df[new_order]
-    df.to_sql('Wetter', conn, if_exists = 'append', index = False)
+    #'wind_speed_10m (km/h)' is important ??
+    new_order = ['DateID', 'TimeID','temperature_2m (°C)', 'relative_humidity_2m (%)', 'rain (mm)', 'snowfall (cm)', 'cloud_cover (%)']  # Specify the new order
+    df_final = df_final[new_order]
+    df_final.to_sql('Wetter', conn, if_exists = 'append', index = False)
     
     print("Weather Data is well stored")
-    
+        
 def store_bezirke(conn,gdf_bezirke):
     # Prepare the DataFrame for SQL
     df_bezirke = gdf_bezirke.reset_index()

@@ -34,7 +34,7 @@ def check_table_content(cur, table_name):
 
 def fetch_data_df(table_name, conn):
     return pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
-    
+   
 
 def preload_lookup_tables():
     conn = ct.create_or_open_database()
@@ -43,6 +43,15 @@ def preload_lookup_tables():
     date_lookup = dict(cur.fetchall())
     conn.close()
     return date_lookup
+
+def fetch_data_bezirk(table_name, conn):
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT bezirk FROM {table_name}")
+    results = cursor.fetchall()
+    # Convert the result to a list
+    bezirk_list = [row[0] for row in results]  # Extract the first element from each tuple
+    return bezirk_list
+
 
 #if required!!
 def generate_csv():
@@ -86,3 +95,7 @@ def get_geo():
 def fetch_data_df_chunk(conn, table_name):
     chunks = pd.read_sql_query(f"SELECT * FROM {table_name}", conn, chunksize=10000)
     return chunks
+
+def drop_table(table_name , conn):
+    cur = conn.cursor()
+    cur.execute(f"DROP TABLE IF EXISTS {table_name}") 

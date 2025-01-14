@@ -1,5 +1,5 @@
 the required libraries for the Project:
-Pandas, numpy, matplotlib, seaborn, sklearn, sqllite
+Pandas, numpy, matplotlib, seaborn, sklearn, sqllite, folium
 
 we specify for every library for which Purpose is used
 and which other requirements needed
@@ -9,4 +9,4 @@ I have to add any spec for the analysis and details to the data used
 steps: 
 - install the needed library
 - run the create_complete_database in order the complete dabase for the analysis (we can simply in the futurewhen we want include new years  2024...)
-- the generated database is stored locally
+- the generated database is stored locally because it is ignored by commit (too large)

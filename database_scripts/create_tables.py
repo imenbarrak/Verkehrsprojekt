@@ -4,7 +4,7 @@ import sqlite3
 def create_or_open_database():
     print("""Establish SQLite connection.""")
     return sqlite3.connect("..\\data\\processed\\my_database_project.db")
-     
+
 
 def close_database(conn, cur):
     cur.close()
@@ -12,7 +12,7 @@ def close_database(conn, cur):
     print("connection and cursor closed")
         
 def create_table_date (cur):
- 
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS Date_dim (
         DateID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +48,7 @@ def create_table_Bezirke(cur):
     )
     ''')
     print("table Bezirke is created")
-   
+
 def create_table_zählstelle(cur):
     
     cur.execute('''
