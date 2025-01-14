@@ -249,6 +249,7 @@ def store_weather_data_Pro_Bezirk(conn):
             df_wetter_bezirk[df_wetter_bezirk.columns[0]] = pd.to_datetime(df_wetter_bezirk.iloc[:, 0], errors='coerce')
             df_wetter_bezirk['Date'] = df_wetter_bezirk.iloc[:,0].dt.strftime('%d.%m.%Y')  # Extract the date part
             df_wetter_bezirk['TimeID'] = df_wetter_bezirk.iloc[:,0].dt.hour  # Extract the time part
+            df_wetter_bezirk['Bezirk'] = name
             df_wetter_bezirk.reset_index()
             #TODO: check if improving is possible 
             date_dim = pd.read_sql_query("SELECT DateID, Date FROM Date_dim", conn)
@@ -262,7 +263,7 @@ def store_weather_data_Pro_Bezirk(conn):
             continue  # Skip this table if there's an error
         
     #'wind_speed_10m (km/h)' is important ??
-    new_order = ['DateID', 'TimeID','temperature_2m (°C)', 'relative_humidity_2m (%)', 'rain (mm)', 'snowfall (cm)', 'cloud_cover (%)']  # Specify the new order
+    new_order = ['DateID', 'TimeID', 'Bezirk', 'temperature_2m (°C)', 'relative_humidity_2m (%)', 'rain (mm)', 'snowfall (cm)', 'cloud_cover (%)']  # Specify the new order
     df_final = df_final[new_order]
     df_final.to_sql('Wetter', conn, if_exists = 'append', index = False)
     
