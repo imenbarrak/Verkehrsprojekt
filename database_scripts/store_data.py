@@ -90,39 +90,34 @@ def store_mess_data_fahrrad(cur):
     excel_file_path = '..\\data\\raw\\Fahrrad\\gesamtdatei-stundenwerte.xlsx'
     excel_file = pd.ExcelFile(excel_file_path)
     sheet_names = excel_file.sheet_names
-
-    data = [] 
     for item in sheet_names[3:]:
-        print(item)
-        df = pd.read_excel(excel_file_path, sheet_name = item,index_col = 0)
-        df_reset = df.reset_index()
 
-        df_reset.iloc[:,0]= pd.to_datetime(df_reset.iloc[:,0])
-        df_reset['Date'] = df_reset.iloc[:,0].dt.strftime('%d.%m.%Y')  # Extract the date part
-        df_reset['Time'] = df_reset.iloc[:,0].dt.hour  # Extract the time part
-
-        df_reset.drop('Zählstelle        Inbetriebnahme', axis = 1, inplace = True)
+        df= pd.read_excel(excel_file_path, sheet_name = item)
+        df.iloc[:,0]= pd.to_datetime(df.iloc[:,0])
+        df['Date'] = df.iloc[:,0].dt.strftime('%d.%m.%Y')  # Extract the date part
+        df['Time'] = df.iloc[:,0].dt.hour  # Extract the time part
+        df.drop('Zählstelle        Inbetriebnahme', axis = 1, inplace = True)
         columns = ['Date', 'Time'] + [col for col in df.columns if col not in ['Date', 'Time']]
+        df = df[columns]
 
-        # Reorder the DataFrame
-        df_reset = df_reset[columns]
-        #TODO: which code can I also put out of this method
-        date_ids = [
-            cur.execute("SELECT DateID FROM Date_dim WHERE date = ?", (date,)).fetchone()[0]
-            for date in df_reset['Date'].tolist()
-        ]
-        hour_ids = df_reset['Time'].tolist()
+        cur.execute("SELECT date, DateID FROM Date_dim")
+        date_mapping = dict(cur.fetchall())  # {Date_id: Date}
+        df['DateID'] = df['Date'].map(date_mapping)
+
         try:
-            for column in df_reset.columns[2:]:
-                zaehler = column.split()[0]
-                zaehler_ids = [zaehler for _ in range(len(date_ids))]
-                data.extend([(zaehler_id, date_id, hour_id,  wert) for zaehler_id, date_id, hour_id,  wert in zip(zaehler_ids,date_ids, hour_ids,  df_reset[column])])
+            for column in df.columns[2:]:
+                if len(column.split()) ==2:
+                    zaehler, inbetriebnahme = column.split()
+                    #inbetriebnahme_dt = datetime.strptime(inbetriebnahme, '%d.%m.%Y')
+                    filtered_df = df[df['Date'] >= inbetriebnahme].copy()
+                    filtered_df.loc[:, 'Zaehler'] = zaehler
+                    df_mess = filtered_df[['Zaehler','DateID','Time',column]]
+                    cur.executemany("INSERT INTO Messdaten_Fahrrad (Zählstelle, DateID, TimeID, Wert) VALUES (?,?,?,?)" , df_mess.values)        
 
-            cur.executemany("INSERT INTO Messdaten_Fahrrad (Zählstelle, DateID, TimeID, Wert) VALUES (?,?,?,?)" , data)        
-            
         except Exception as e:
             print(f"Es gibt ein Problem {e}")
-            
+
+
 def store_mess_data_auto():
     
     file_infos = []

@@ -7,6 +7,7 @@ import db_utils as dbu
 def main():
     conn = ct.create_or_open_database()
     cur = conn.cursor()
+    
     gdf_bezirke = dbu.get_geo()
     #TODO. More separation of concerns if possible 
     #avoid opening the database many times 

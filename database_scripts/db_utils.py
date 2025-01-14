@@ -96,6 +96,5 @@ def fetch_data_df_chunk(conn, table_name):
     chunks = pd.read_sql_query(f"SELECT * FROM {table_name}", conn, chunksize=10000)
     return chunks
 
-def drop_table(table_name , conn):
-    cur = conn.cursor()
+def drop_table(table_name , cur):
     cur.execute(f"DROP TABLE IF EXISTS {table_name}") 
