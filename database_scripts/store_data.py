@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 import holidays
 from shapely import Point
@@ -99,6 +100,7 @@ def store_mess_data_fahrrad(cur):
         df.drop('Zählstelle        Inbetriebnahme', axis = 1, inplace = True)
         columns = ['Date', 'Time'] + [col for col in df.columns if col not in ['Date', 'Time']]
         df = df[columns]
+        df['Date'] = pd.to_datetime(df['Date'], format='%d.%m.%Y')
 
         cur.execute("SELECT date, DateID FROM Date_dim")
         date_mapping = dict(cur.fetchall())  # {Date_id: Date}
@@ -106,9 +108,9 @@ def store_mess_data_fahrrad(cur):
 
         try:
             for column in df.columns[2:]:
-                if len(column.split()) ==2:
+                if len(column.split()) == 2:
                     zaehler, inbetriebnahme = column.split()
-                    #inbetriebnahme_dt = datetime.strptime(inbetriebnahme, '%d.%m.%Y')
+                    inbetriebnahme = pd.to_datetime(inbetriebnahme, format='%d.%m.%Y')
                     filtered_df = df[df['Date'] >= inbetriebnahme].copy()
                     filtered_df.loc[:, 'Zaehler'] = zaehler
                     df_mess = filtered_df[['Zaehler','DateID','Time',column]]

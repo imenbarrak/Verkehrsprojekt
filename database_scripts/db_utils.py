@@ -63,6 +63,8 @@ def fetch_data(table_name, database_name):
         return pd.read_sql_query(f"select * from {table_name}", conn)
 
 def get_geo():
+
+    # Get data for Berlin Bezirke
     gdf = ox.features_from_place(
         "Berlin, Germany",
         tags={"boundary": "administrative", "admin_level": "6"}
@@ -85,11 +87,22 @@ def get_geo():
     gdf_bezirke = gpd.read_file("../data/processed/berlin_bezirke.geojson")
     gdf_bezirke = gdf_bezirke[gdf_bezirke['name'].isin(berlin_bezirke)]  # Filter Bezirke
     gdf_bezirke = gdf_bezirke.dissolve(by="name")  # Dissolve by name
-    gdf_bezirke = gdf_bezirke.to_crs("EPSG:4326")  # Ensure CRS is WGS84
-    gdf_bezirke['Breitengrad'] = gdf_bezirke.geometry.centroid.y
-    gdf_bezirke['Längengrad'] = gdf_bezirke.geometry.centroid.x
-    gdf_bezirke.drop(['element','id'], axis =1, inplace=True)
-    
+
+    # Convert to a projected CRS for accurate centroid calculations
+    gdf_bezirke = gdf_bezirke.to_crs("EPSG:3857")  # Web Mercator (meters)
+
+    # Calculate centroids in the projected CRS
+    gdf_bezirke['centroid_x'] = gdf_bezirke.geometry.centroid.x
+    gdf_bezirke['centroid_y'] = gdf_bezirke.geometry.centroid.y
+
+    # Reproject back to WGS84 for final output
+    gdf_bezirke = gdf_bezirke.to_crs("EPSG:4326")
+    gdf_bezirke['Breitengrad'] = gdf_bezirke['centroid_y']
+    gdf_bezirke['Längengrad'] = gdf_bezirke['centroid_x']
+
+    # Drop temporary centroid columns
+    gdf_bezirke = gdf_bezirke.drop(columns=['centroid_x', 'centroid_y'])
+
     return gdf_bezirke
 
 def fetch_data_df_chunk(conn, table_name):
