@@ -86,8 +86,8 @@ def store_messquerschnitt(conn, df_bezirke):
     result.to_sql('Messquerschnitt', conn, if_exists = 'append', index = False)
     print("Messquerschnitt data saved successfully!")
 
-def store_mess_data_fahrrad(cur):
-    
+def store_mess_data_fahrrad(conn):
+    cur = conn.cursor()
     excel_file_path = '..\\data\\raw\\Fahrrad\\gesamtdatei-stundenwerte.xlsx'
     excel_file = pd.ExcelFile(excel_file_path)
     sheet_names = excel_file.sheet_names
@@ -100,8 +100,9 @@ def store_mess_data_fahrrad(cur):
         df.drop('Zählstelle        Inbetriebnahme', axis = 1, inplace = True)
         columns = ['Date', 'Time'] + [col for col in df.columns if col not in ['Date', 'Time']]
         df = df[columns]
-        df['Date'] = pd.to_datetime(df['Date'], format='%d.%m.%Y')
-
+        #df['Date'] = pd.to_datetime(df['Date'], format='%d.%m.%Y')
+        df['Date_dt'] = pd.to_datetime(df['Date'], format='%d.%m.%Y')
+        
         cur.execute("SELECT date, DateID FROM Date_dim")
         date_mapping = dict(cur.fetchall())  # {Date_id: Date}
         df['DateID'] = df['Date'].map(date_mapping)
@@ -111,14 +112,14 @@ def store_mess_data_fahrrad(cur):
                 if len(column.split()) == 2:
                     zaehler, inbetriebnahme = column.split()
                     inbetriebnahme = pd.to_datetime(inbetriebnahme, format='%d.%m.%Y')
-                    filtered_df = df[df['Date'] >= inbetriebnahme].copy()
+                    filtered_df = df[df['Date_dt'] >= inbetriebnahme].copy()
                     filtered_df.loc[:, 'Zaehler'] = zaehler
                     df_mess = filtered_df[['Zaehler','DateID','Time',column]]
                     cur.executemany("INSERT INTO Messdaten_Fahrrad (Zählstelle, DateID, TimeID, Wert) VALUES (?,?,?,?)" , df_mess.values)        
-
+                    conn.commit()
         except Exception as e:
             print(f"Es gibt ein Problem {e}")
-
+    print('Mess_Data_Fahrrad are stored successfully')
 
 def store_mess_data_auto():
     

@@ -28,7 +28,7 @@ def main():
     st.store_bezirke(conn, gdf_bezirke)
     st.store_weather_data_Pro_Bezirk(conn)
     st.store_zählstelle(conn, gdf_bezirke)
-    st.store_mess_data_fahrrad(cur)
+    st.store_mess_data_fahrrad(conn)
     st.store_messquerschnitt(conn, gdf_bezirke)
     st.store_mess_data_auto()
     
