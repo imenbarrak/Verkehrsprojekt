@@ -62,6 +62,7 @@ def fetch_data(table_name, database_name):
     with sqlite3.connect(database_name) as conn:
         return pd.read_sql_query(f"select * from {table_name}", conn)
 
+#TODO:split this code between create geojson Datei and read from geojson Datei if available
 def get_geo():
 
     # Get data for Berlin Bezirke
@@ -111,3 +112,15 @@ def fetch_data_df_chunk(conn, table_name):
 
 def drop_table(table_name , cur):
     cur.execute(f"DROP TABLE IF EXISTS {table_name}") 
+
+#TE539 für den könnte den Bezirk nicht gefunden werden 
+#I would set it to Friedrichshain-Kreuzberg
+# Update this code to be useful for every point coordinates given
+from geopy.geocoders import Nominatim
+def check_point_bezirk():
+    geolocator = Nominatim(user_agent="bezirk_locator")
+    location = geolocator.reverse((13.51683, 52.39825), language="de")
+    if location:
+        print("Gefundene Adresse:", location.address)
+    else:
+        print("Bezirk konnte nicht gefunden werden.")

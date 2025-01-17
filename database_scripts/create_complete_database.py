@@ -13,25 +13,28 @@ def main():
     #avoid opening the database many times 
     
     #Table creation
-    ct.create_table_date(cur)
+    #ct.create_table_date(cur)
     ct.create_table_time(cur)
     ct.create_table_Bezirke(cur)
-    ct.create_table_zählstelle(cur)
+    #ct.create_table_zählstelle(cur)
     ct.create_table_Messquerschnitt(cur)
-    ct.create_table_Messdaten_auto(cur)
-    ct.create_table_messdaten_Fahrrad(cur)
-    ct.create_indexes(cur)
+    #ct.create_table_Messdaten_auto(cur)
+    ct.create_table_Messdaten_auto_with_date(cur)
+    #ct.create_table_messdaten_Fahrrad(cur)
+    #ct.create_indexes(cur)
     
     #storing data
-    st.store_date(cur)
+    #st.store_date(cur)
     st.store_time(cur)
     st.store_bezirke(conn, gdf_bezirke)
     st.store_weather_data_Pro_Bezirk(conn)
-    st.store_zählstelle(conn, gdf_bezirke)
-    st.store_mess_data_fahrrad(conn)
+    #st.store_zählstelle(conn, gdf_bezirke)
+    #st.store_mess_data_fahrrad(conn)
     st.store_messquerschnitt(conn, gdf_bezirke)
-    st.store_mess_data_auto()
-    
+    #st.store_mess_data_auto()
+    ####st.store_mess_data_auto_with_Date()
+    import storing_mess_data_auto  as stm
+    stm.store_mess_data_auto_with_Date()
     conn.commit()
     print("All tasks completed successfully!")
     

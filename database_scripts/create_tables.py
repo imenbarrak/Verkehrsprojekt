@@ -67,10 +67,7 @@ def create_table_Messquerschnitt(cur):
         CREATE TABLE IF NOT EXISTS Messquerschnitt (
         MQ_KURZNAME TEXT PRIMARY KEY,
         Bezirk TEXT,
-        STRASSE TEXT,
-        POSITION TEXT,
-        POS_DETAIL TEXT,
-        INBETRIEBNAHME TEXT
+        INBETRIEBNAHME DATE
     )
     ''')
     print("Table Messquerschnitt is created")
@@ -79,7 +76,7 @@ def create_table_Messdaten_auto(cur):
     cur.execute("""
         CREATE TABLE IF NOT EXISTS Messdaten_auto(
         MQ_KURZNAME TEXT NOT NULL,
-        DateId DATETIME NOT NULL,
+        DateId INTEGER NOT NULL,
         TimeId INTEGER,
         q_pkw_mq_hr INTEGER,
         FOREIGN KEY (MQ_KURZNAME) REFERENCES Messquerschnitt(MQ_KURZNAME),
@@ -94,7 +91,7 @@ def create_table_messdaten_Fahrrad (cur):
     cur.execute("""
         CREATE TABLE IF NOT EXISTS Messdaten_Fahrrad (
         Zählstelle TEXT NOT NULL,
-        DateID DATETIME NOT NULL,
+        DateID INTEGER NOT NULL,
         TimeID INTEGER NOT NULL,
         Wert INTEGER,
         FOREIGN KEY (Zählstelle) REFERENCES Standorten_Zählstelle(Zählstelle),
@@ -105,7 +102,25 @@ def create_table_messdaten_Fahrrad (cur):
     """)
     
     print("Table MessdatenFahrrad is created")
-    
+
+def create_table_Messdaten_auto_with_date(cur):
+    print('create_table_Messdaten_auto_with_date')
+    try:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS Messdaten_auto(
+            MQ_KURZNAME TEXT NOT NULL,
+            Date DATE NOT NULL,
+            Time INTEGER,
+            q_pkw_mq_hr INTEGER,
+            FOREIGN KEY (MQ_KURZNAME) REFERENCES Messquerschnitt(MQ_KURZNAME),
+            FOREIGN KEY (Time) REFERENCES Time_dim(TimeID),
+            UNIQUE(MQ_KURZNAME, Date, Time)
+            )
+        """)
+        print("Table MessdatenAuto is created")
+    except Exception as e:
+        print(f"Problem by creation Table Mess_auto {e}")
+        
 
 def create_indexes(cur):
     #add index for primary key + index for date
