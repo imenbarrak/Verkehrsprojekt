@@ -83,7 +83,7 @@ def store_messquerschnitt(conn, gdf_bezirke):
     gdf_Messquerschnitt[gdf_Messquerschnitt['MQ_KURZNAME']== 'TE539']
     gdf_Messquerschnitt.loc[gdf_Messquerschnitt['MQ_KURZNAME'] == 'TE539', 'name'] = 'Friedrichshain-Kreuzberg'
 
-    result = gdf_Messquerschnitt[['MQ_KURZNAME','name','INBETRIEBNAHME']]
+    result = gdf_Messquerschnitt[['MQ_KURZNAME','name','BREITE_WGS84','LÄNGE_WGS84','INBETRIEBNAHME']]
     result = result.rename(columns={'name': 'Bezirk'})
     result.to_sql('Messquerschnitt', conn, if_exists = 'append', index = False)
     print("Messquerschnitt data saved successfully!")
@@ -105,9 +105,9 @@ def store_mess_data_fahrrad(conn):
         #df['Date'] = pd.to_datetime(df['Date'], format='%d.%m.%Y')
         df['Date_dt'] = pd.to_datetime(df['Date'], format='%d.%m.%Y')
         
-        cur.execute("SELECT date, DateID FROM Date_dim")
-        date_mapping = dict(cur.fetchall())  # {Date_id: Date}
-        df['DateID'] = df['Date'].map(date_mapping)
+        #cur.execute("SELECT date, DateID FROM Date_dim")
+        #date_mapping = dict(cur.fetchall())  # {Date_id: Date}
+        #df['DateID'] = df['Date'].map(date_mapping)
 
         try:
             for column in df.columns[2:]:
@@ -116,7 +116,7 @@ def store_mess_data_fahrrad(conn):
                     inbetriebnahme = pd.to_datetime(inbetriebnahme, format='%d.%m.%Y')
                     filtered_df = df[df['Date_dt'] >= inbetriebnahme].copy()
                     filtered_df.loc[:, 'Zaehler'] = zaehler
-                    df_mess = filtered_df[['Zaehler','DateID','Time',column]]
+                    df_mess = filtered_df[['Zaehler','Date','Time',column]]
                     cur.executemany("INSERT INTO Messdaten_Fahrrad (Zählstelle, DateID, TimeID, Wert) VALUES (?,?,?,?)" , df_mess.values)        
                     conn.commit()
         except Exception as e:
@@ -354,39 +354,35 @@ def process_file(file_info, date_lookup, queue):
     print(f"[{current_process().name}] Finished file: {file_path}")
 
 def store_weather_data_Pro_Bezirk(conn):
-    try:
-        df_final = pd.DataFrame()
-        df_bezirke = dbu.fetch_data_bezirk('Bezirke', conn)
-        for name in df_bezirke:
-            try:
-                df_wetter_bezirk = pd.read_csv('../data/raw/Bezirke Wetter/open-meteo-' + name + '.csv', header = 2)
-                df_wetter_bezirk[df_wetter_bezirk.columns[0]] = pd.to_datetime(df_wetter_bezirk.iloc[:, 0], errors='coerce')
-                df_wetter_bezirk['Date'] = df_wetter_bezirk.iloc[:,0].dt.strftime('%d.%m.%Y')  # Extract the date part
-                df_wetter_bezirk['TimeID'] = df_wetter_bezirk.iloc[:,0].dt.hour  # Extract the time part
-                df_wetter_bezirk['Bezirk'] = name
-                df_wetter_bezirk.reset_index()
-                #TODO: check if improving is possible 
-                #date_dim = pd.read_sql_query("SELECT DateID, Date FROM Date_dim", conn)
-                #df_wetter_bezirk = pd.merge(df_wetter_bezirk,  date_dim , on = 'Date', how = 'inner')
-                
-                #df_wetter_bezirk.drop(['time','Date'], inplace = True, axis = 1)
-                df_final = pd.concat([df_final, df_wetter_bezirk], ignore_index=True)
-                
-            except Exception as e:
-                print(f"Error querying table Bezirke : {e}")
-                continue  # Skip this table if there's an error
-            
-        #'wind_speed_10m (km/h)' is important ??
-        #new_order = ['Date', 'TimeID', 'Bezirk', 'temperature_2m (°C)', 'relative_humidity_2m (%)', 'rain (mm)', 'snowfall (cm)', 'cloud_cover (%)']  # Specify the new order
-        #df_final = df_final[new_order]
-        df_final.to_sql('Wetter', conn, if_exists = 'append', index = False)
-        #df_wetter_bezirk.to_sql('Wetter', conn, if_exists = 'append', index = False)
-        
-        print("Weather Data is well stored")
     
-    except Exception as e:
-        print(f'Problem by storing in the Database: {e}')
+    df_final = pd.DataFrame()
+    df_bezirke = dbu.fetch_data_bezirk('Bezirke', conn)
+    for name in df_bezirke:
+        try:
+            df_wetter_bezirk = pd.read_csv('../data/raw/Bezirke Wetter/open-meteo-' + name + '.csv', header = 2)
+            df_wetter_bezirk[df_wetter_bezirk.columns[0]] = pd.to_datetime(df_wetter_bezirk.iloc[:, 0], errors='coerce')
+            df_wetter_bezirk['Date'] = df_wetter_bezirk.iloc[:,0].dt.strftime('%d.%m.%Y')  # Extract the date part
+            df_wetter_bezirk['TimeID'] = df_wetter_bezirk.iloc[:,0].dt.hour  # Extract the time part
+            df_wetter_bezirk['Bezirk'] = name
+            #df_wetter_bezirk.reset_index()
+            #TODO: check if improving is possible 
+            #date_dim = pd.read_sql_query("SELECT DateID, Date FROM Date_dim", conn)
+            #df_wetter_bezirk = pd.merge(df_wetter_bezirk,  date_dim , on = 'Date', how = 'inner')
+            
+            df_wetter_bezirk.drop(['time'], inplace = True, axis = 1)
+            df_final = pd.concat([df_final, df_wetter_bezirk], ignore_index=True)
+            
+        except Exception as e:
+            print(f"Error querying table Bezirke : {e}")
+            continue  # Skip this table if there's an error
         
+    #'wind_speed_10m (km/h)' is important ??
+    new_order = ['Date', 'TimeID', 'Bezirk', 'temperature_2m (°C)', 'relative_humidity_2m (%)', 'rain (mm)', 'snowfall (cm)', 'cloud_cover (%)']  # Specify the new order
+    df_final = df_final[new_order]
+    df_final.to_sql('Wetter', conn, if_exists = 'append', index = False)
+
+    print("Weather Data is well stored")
+            
 def store_bezirke(conn,gdf_bezirke):
     # Prepare the DataFrame for SQL
     df_bezirke = gdf_bezirke.reset_index()
@@ -421,7 +417,7 @@ def store_zählstelle(conn,gdf_bezirke):
     gdf_zaehlstellen = gpd.sjoin(gdf_zaehlstellen, gdf_bezirke, how="left", predicate="within")
 
     # Keep only relevant columns
-    result = gdf_zaehlstellen[["Zählstelle", "name", 'Beschreibung', 'Installationsdatum']]
+    result = gdf_zaehlstellen[["Zählstelle", "name",'Breitengrad_left', 'Längengrad_left',  'Beschreibung', 'Installationsdatum']]
     result = result.rename(columns={'name': 'Bezirk'})
     #insert in the database
     result.to_sql('Standorten_Zählstelle', conn, if_exists = 'append', index = False)

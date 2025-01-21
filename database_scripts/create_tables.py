@@ -55,6 +55,8 @@ def create_table_zählstelle(cur):
     CREATE TABLE IF NOT EXISTS Standorten_Zählstelle (
         Zählstelle TEXT PRIMARY KEY,
         Bezirk TEXT,
+        Breitengrad REAL,
+        Längengrad REAL,
         Beschreibung TEXT,
         Installationsdatum DATE
     )
@@ -67,6 +69,8 @@ def create_table_Messquerschnitt(cur):
         CREATE TABLE IF NOT EXISTS Messquerschnitt (
         MQ_KURZNAME TEXT PRIMARY KEY,
         Bezirk TEXT,
+        Breitengrad REAL,
+        Längengrad REAL,
         INBETRIEBNAHME DATE
     )
     ''')
