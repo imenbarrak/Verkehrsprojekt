@@ -1,6 +1,6 @@
 # Ignore specific files
 data/processed/my_database_project.db
-data/processed/berlin_bezirke.geojson
+data/processed/
 
 # Ignore __pycache__ and any .pyc files
 __pycache__/
