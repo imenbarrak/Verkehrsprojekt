@@ -107,7 +107,7 @@ def app():
             fig_pkws.update_traces(
                 line=dict(color='blue'),  # Set the color for PKWs line
                 name='PKWs',  # Set the name for the PKWs line in the legend
-                hovertemplate="<b>Quarter-Year:</b> %{x}<br><b>PKWs:</b> %{y}<extra></extra>"  # Custom hover info
+                hovertemplate="<b>PKWs:</b> %{y}<extra></extra>"  # Custom hover info
             )
 
             # Plot the second line (Fahrräder) using px.line
@@ -316,7 +316,17 @@ def app():
 
             # Display the plot in Streamlit
             st.plotly_chart(fig_F, use_container_width=False)
-                
+        
+        original_layout = fig_F.layout    
+        original_layout = fig.layout
+        original_layout = fig_pkws.layout
+        original_layout =fig_fahrrad.layout
+        # Add a reset button
+        if st.button("Reset View"):
+            fig.update_layout(original_layout)
+            fig_F.update_layout(original_layout)  
+            fig_pkws.update_layout(original_layout)
+            fig_fahrrad.update_layout(original_layout)        
     else:
         st.warning("No data loaded. Please load the data first.")
         
