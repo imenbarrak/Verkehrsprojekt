@@ -48,14 +48,14 @@ def app():
             #plt.figure(figsize=(10, 6))
                 # Plot the heatmap
                 sns.heatmap(corr_matrix_fahrräder, annot=True, cmap='coolwarm', fmt='.2f' ,vmin=-1, vmax=1)
-                plt.title('Correlation Heatmap Fahrräders')
+                plt.title('Korrelation Heatmap Fahrräder')
                 st.pyplot(plt)  # Display the plot
                 plt.clf()
                 
             with col2:
                 # Plot the heatmap
                 sns.heatmap(corr_matrix_pkws, annot=True,  fmt='.2f', vmin=-1, vmax=1)
-                plt.title('Correlation Heatmap PKWs')
+                plt.title('Korrelation Heatmap PKWs')
                 st.pyplot(plt)  # Display the plot
                 plt.clf()
             
@@ -131,8 +131,14 @@ def app():
 
             # Update the layout for the combined figure
             fig_pkws.update_layout(
-                xaxis=dict(title='Year-Quarter', tickangle=45),
-                yaxis=dict(title='Traffic Volume'),
+                title={
+                    "text": 'Quartalsweises Verkehrsaufkommen: PKWs vs Fahrräder', 
+                    "x": 0.5,  # Horizontal center (0.5 = middle, 0 = left, 1 = right)
+                    "xanchor": "center",  # Anchor the title at the center
+                    "yanchor": "top",  # Vertically anchor it at the top
+                    },
+                xaxis=dict(title='Jahr-Quartal', tickangle=45),
+                yaxis=dict(title='Verkehrsaufkommen'),
                 template='plotly_white',
                 hovermode="x unified",  # Tooltip shows values for the current x-axis point
                 legend_title="Legend",  # Title for the legend
@@ -203,6 +209,12 @@ def app():
             
             # Update the layout of the figure
             fig.update_layout(
+                title={
+                    "text": 'Wöchentlich Aggregated Values',  # Title text
+                    "x": 0.5,  # Horizontal center (0.5 = middle, 0 = left, 1 = right)
+                    "xanchor": "center",  # Anchor the title at the center
+                    "yanchor": "top",  # Vertically anchor it at the top
+                    },
                 #title='Wöchentlich Aggregated Values',
                 xaxis_title='Week',
                 yaxis_title='Mean Wert',
@@ -215,12 +227,12 @@ def app():
         with st.expander("Täglich Graph"):
             # Map weekdays to their names
             st.header("PKWs vs Fahrräder Nutzung im Laufe der Zeit (Täglich)")
-            weekday_labels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            weekday_labels = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
             # Define cell size
             cell_width = 50  # Width of each cell in pixels
             cell_height = 50  # Height of each cell in pixels
 
-            st.subheader("PKWs")
+            #st.subheader("PKWs")
             # Create the pivot table
             pivot = df_pkws.pivot_table(
                 values='Anzahl', 
@@ -237,12 +249,15 @@ def app():
             else:
                 fig_width = 100
                 fig_height = 100
-
+            
+            x_range = [pivot.columns[0], pivot.columns[-1]]
+            y_range = [0, len(pivot.index) - 1]
             # Create the heatmap
             fig = px.imshow(
                 pivot.values,
+                title='Tägliche PKWs Nutzung im Laufe der Zeit',
                 text_auto=True,
-                labels=dict(x="Hour of Day", y="Day of Week", color="Average Users"),
+                labels=dict(x="Stunde des Tages", y="Wochentag", color="Durchschnittsnutzer"),
                 x=pivot.columns,
                 y=weekday_labels[:len(pivot.index)],  # Use only the weekdays present in the index
                 color_continuous_scale="RdBu"
@@ -250,19 +265,26 @@ def app():
 
             # Customize the layout
             fig.update_layout(
-                autosize=False,  # Disable automatic resizing
+                title={
+                    "text": "Tägliche PKWs Nutzung im Laufe der Zeit",  # Title text
+                    "x": 0.5,  # Horizontal center (0.5 = middle, 0 = left, 1 = right)
+                    "xanchor": "center",  # Anchor the title at the center
+                    "yanchor": "top",  # Vertically anchor it at the top
+                    },
+                autosize=True,  # Disable automatic resizing
                 width=fig_width,  # Set figure width based on cell size
                 height=fig_height,  # Set figure height based on cell size
                 margin=dict(l=20, r=20, t=50, b=50),  # Minimize external margins
                 yaxis=dict(
-                    title="Day of Week",
+                    title="Wochentag",
                     tickvals=list(range(len(pivot.index))),  # Set tick values for each weekday
-                    ticktext=weekday_labels[:len(pivot.index)]  # Map tick values to weekday labels
+                    ticktext=weekday_labels[:len(pivot.index)],
+                    range=y_range# Map tick values to weekday labels
                 ),
-                xaxis=dict(title="Hour of Day"),
+                xaxis=dict(title="Stunde des Tages",range=x_range),
                 coloraxis_colorbar=dict(
                     lenmode="fraction",  # Fraction of the figure height
-                    len=0.5,             # Reduce color bar size to 50% of height
+                    len=0.5
                 )
             )
 
@@ -272,8 +294,6 @@ def app():
             # Display the plot in Streamlit
             st.plotly_chart(fig, use_container_width=False)
 
-            
-            st.subheader("Fahrräders")
             # Create the pivot table
             pivot_F = df_Fahrräder.pivot_table(
                 values='Anzahl', 
@@ -286,8 +306,9 @@ def app():
             # Create the heatmap
             fig_F = px.imshow(
                 pivot_F.values,
+                #title='Tägliche Fahrräder Nutzung im Laufe der Zeit',
                 text_auto=True,
-                labels=dict(x="Hour of Day", y="Day of Week", color="Average Users"),
+                labels=dict(x="Stunde des Tages", y="Wochentag", color="Durchschnittsnutzer"),
                 x=pivot_F.columns,
                 y=weekday_labels[:len(pivot_F.index)],  # Use only the weekdays present in the index
                 color_continuous_scale="RdBu"
@@ -295,16 +316,22 @@ def app():
 
             # Customize the layout
             fig_F.update_layout(
+                title={
+                    "text": "Tägliche Fahrräder Nutzung im Laufe der Zeit",  # Title text
+                    "x": 0.5,  # Horizontal center (0.5 = middle, 0 = left, 1 = right)
+                    "xanchor": "center",  # Anchor the title at the center
+                    "yanchor": "top",  # Vertically anchor it at the top
+                    },
                 autosize=False,  # Disable automatic resizing
                 width=fig_width,  # Set figure width based on cell size
                 height=fig_height,  # Set figure height based on cell size
                 margin=dict(l=20, r=20, t=50, b=50),  # Minimize external margins
                 yaxis=dict(
-                    title="Day of Week",
+                    title="Wochentag",
                     tickvals=list(range(len(pivot_F.index))),  # Set tick values for each weekday
                     ticktext=weekday_labels[:len(pivot_F.index)]  # Map tick values to weekday labels
                 ),
-                xaxis=dict(title="Hour of Day"),
+                xaxis=dict(title="Stunde des Tages"),
                 coloraxis_colorbar=dict(
                     lenmode="fraction",  # Fraction of the figure height
                     len=0.5,             # Reduce color bar size to 50% of height
@@ -316,17 +343,7 @@ def app():
 
             # Display the plot in Streamlit
             st.plotly_chart(fig_F, use_container_width=False)
-        
-        original_layout = fig_F.layout    
-        original_layout = fig.layout
-        original_layout = fig_pkws.layout
-        original_layout =fig_fahrrad.layout
-        # Add a reset button
-        if st.button("Reset View"):
-            fig.update_layout(original_layout)
-            fig_F.update_layout(original_layout)  
-            fig_pkws.update_layout(original_layout)
-            fig_fahrrad.update_layout(original_layout)        
+              
     else:
         st.warning("No data loaded. Please load the data first.")
         
